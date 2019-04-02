@@ -60,7 +60,9 @@ function invoke(httpMethod, async, fn, path, opts) {
 
 	const options = Object.assign({
 		path,
+		'resource-path': path,
 		httpMethod,
+		'http-method': httpMethod,
 		queryStringParameters,
 		requestContext
 	}, opts);
