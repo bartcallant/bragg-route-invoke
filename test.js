@@ -8,7 +8,25 @@ test.before(() => {
 	const stub = sinon.stub(lambda, 'invoke');
 	stub.withArgs('foo', {httpMethod: 'post', path: 'bar', body: {foo: 'bar'}, queryStringParameters: sinon.match.any, requestContext: sinon.match.any}).rejects('400 - Bad Request');
 	stub.withArgs('foo', {httpMethod: 'post', path: 'baz', body: {foo: 'baz'}, queryStringParameters: sinon.match.any, requestContext: sinon.match.any}).rejects('Something went wrong');
-	stub.resolves({foo: 'bar'});
+	stub.withArgs('foo', {httpMethod: 'post', path: '/foo', body: sinon.match.any, queryStringParameters: sinon.match.any, requestContext: sinon.match.any}).resolves({
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		statusCode: 200,
+		body: '{"foo":"bar"}'
+	});
+	stub.withArgs('foo', {httpMethod: 'get', path: '/foo', queryStringParameters: sinon.match.any, requestContext: sinon.match.any}).resolves({
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		statusCode: 200,
+		body: '{"foo":"bar"}'
+	});
+	stub.withArgs('foo', {httpMethod: 'get', path: '/foostring', queryStringParameters: sinon.match.any, requestContext: sinon.match.any}).resolves({
+		headers: {},
+		statusCode: 200,
+		body: '{"foo":"bar"}'
+	});
 
 	const invokeAsync = sinon.stub(lambda, 'invokeAsync');
 	invokeAsync.resolves({foo: 'baz'});
@@ -33,7 +51,23 @@ test('error', async t => {
 });
 
 test('result', async t => {
-	t.deepEqual(await m.get('foo', '/foo'), {foo: 'bar'});
+	t.deepEqual(await m.get('foo', '/foo'), {
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		statusCode: 200,
+		body: {
+			foo: 'bar'
+		}
+	});
+});
+
+test('result without content type', async t => {
+	t.deepEqual(await m.get('foo', '/foostring'), {
+		headers: {},
+		statusCode: 200,
+		body: '{"foo":"bar"}'
+	});
 });
 
 test.serial('invoke no params', async t => {
